@@ -1,0 +1,41 @@
+services:
+  web:
+    container_name: front
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - node-app
+    networks:
+      - external
+      - internal
+  node-app:
+    container_name: web
+    build: ./backend/. 
+    depends_on:
+      - mongo
+    networks:
+      - internal
+    env_file:
+      - .env
+  mongo:
+    image: mongo
+    container_name: database
+    restart: always
+    volumes:
+      - mongo-db:/data/db
+    networks:
+      - internal
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+
+volumes:
+  mongo-db:
+
+networks:
+  external:
+  internal:
+    internal: true

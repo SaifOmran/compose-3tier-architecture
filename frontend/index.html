@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .badge {
+            padding: 5px 10px;
+        }
+
+        .employee-card {
+            transition: transform 0.2s;
+            border-left: 4px solid #667eea;
+        }
+
+        .employee-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner-border {
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <h1 class="text-white mb-2">👔 Employee Management System</h1>
+            <p class="text-white-50">Manage your team efficiently</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mb-3 d-flex gap-2 justify-content-center flex-wrap">
+            <button class="btn btn-light" onclick="toggleForm()">➕ Add Employee</button>
+            <button class="btn btn-light" onclick="seedData()">🌱 Seed Sample Data</button>
+            <button class="btn btn-light" onclick="loadEmployees()">🔄 Refresh</button>
+        </div>
+
+        <!-- Add Employee Form -->
+        <div id="formContainer" class="card" style="display: none;">
+            <div class="card-header">
+                <h5 class="mb-0">Add New Employee</h5>
+            </div>
+            <div class="card-body">
+                <form id="employeeForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Age *</label>
+                            <input type="number" class="form-control" id="age" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Department *</label>
+                            <select class="form-control" id="department" required>
+                                <option value="">Select Department</option>
+                                <option value="Backend">Backend</option>
+                                <option value="Frontend">Frontend</option>
+                                <option value="DevOps">DevOps</option>
+                                <option value="Data Engineering">Data Engineering</option>
+                                <option value="Cloud">Cloud</option>
+                                <option value="QA">QA</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Salary *</label>
+                            <input type="number" class="form-control" id="salary" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Active *</label>
+                            <select class="form-control" id="isActive" required>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Skills (comma-separated) *</label>
+                        <input type="text" class="form-control" id="skills" placeholder="e.g. Node.js, MongoDB, Docker"
+                            required>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">💾 Save Employee</button>
+                        <button type="button" class="btn btn-secondary" onclick="toggleForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <h6 class="mb-3">🔍 Filter Employees</h6>
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="filterDept" placeholder="Department">
+                </div>
+                <div class="col-md-3">
+                    <input type="number" class="form-control" id="filterMinSalary" placeholder="Min Salary">
+                </div>
+                <div class="col-md-3">
+                    <input type="number" class="form-control" id="filterMaxSalary" placeholder="Max Salary">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="filterSkill" placeholder="Skill">
+                </div>
+            </div>
+            <div class="mt-2">
+                <button class="btn btn-primary btn-sm" onclick="applyFilters()">Apply Filters</button>
+                <button class="btn btn-secondary btn-sm" onclick="clearFilters()">Clear</button>
+            </div>
+        </div>
+
+        <!-- Loader -->
+        <div class="loader" id="loader">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Employees List -->
+        <div id="employeesContainer" class="row"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_URL = '/api';
+
+        // Toggle form visibility
+        function toggleForm() {
+            const form = document.getElementById('formContainer');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Show/hide loader
+        function showLoader(show = true) {
+            document.getElementById('loader').style.display = show ? 'block' : 'none';
+        }
+
+        // Load all employees
+        async function loadEmployees() {
+            showLoader(true);
+            try {
+                const response = await fetch(`${API_URL}/users`);
+                const data = await response.json();
+                displayEmployees(data.data || []);
+            } catch (err) {
+                alert('Error loading employees: ' + err.message);
+            }
+            showLoader(false);
+        }
+
+        // Display employees
+        function displayEmployees(employees) {
+            const container = document.getElementById('employeesContainer');
+            container.innerHTML = '';
+
+            if (employees.length === 0) {
+                container.innerHTML = '<div class="col-12"><div class="alert alert-info">No employees found</div></div>';
+                return;
+            }
+
+            employees.forEach(emp => {
+                const card = `
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card employee-card">
+                            <div class="card-body">
+                                <h6 class="card-title">${emp.name}</h6>
+                                <p class="text-muted small mb-2">${emp.email}</p>
+                                <div class="mb-2">
+                                    <span class="badge bg-info">${emp.department}</span>
+                                    <span class="badge ${emp.isActive ? 'bg-success' : 'bg-danger'}">${emp.isActive ? 'Active' : 'Inactive'}</span>
+                                </div>
+                                <p class="mb-1"><small><strong>Age:</strong> ${emp.age}</small></p>
+                                <p class="mb-1"><small><strong>Salary:</strong> $${emp.salary}</small></p>
+                                <p class="mb-3"><small><strong>Skills:</strong> ${emp.skills.join(', ')}</small></p>
+                                <button class="btn btn-sm btn-warning" onclick="editEmployee('${emp._id}')">✏️ Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteEmployee('${emp._id}', '${emp.name}')">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        // Add employee
+        document.getElementById('employeeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoader(true);
+
+            const employeeData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                age: parseInt(document.getElementById('age').value),
+                department: document.getElementById('department').value,
+                salary: parseInt(document.getElementById('salary').value),
+                isActive: document.getElementById('isActive').value === 'true',
+                skills: document.getElementById('skills').value.split(',').map(s => s.trim())
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(employeeData)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ Employee added successfully!');
+                    document.getElementById('employeeForm').reset();
+                    toggleForm();
+                    loadEmployees();
+                } else {
+                    alert('❌ Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Error adding employee: ' + err.message);
+            }
+            showLoader(false);
+        });
+
+        // Delete employee
+        async function deleteEmployee(id, name) {
+            if (!confirm(`Are you sure you want to delete ${name}?`)) return;
+
+            showLoader(true);
+            try {
+                const response = await fetch(`${API_URL}/users/${id}`, { method: 'DELETE' });
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ Employee deleted!');
+                    loadEmployees();
+                } else {
+                    alert('❌ Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Error deleting employee: ' + err.message);
+            }
+            showLoader(false);
+        }
+
+        // Edit employee (placeholder)
+        function editEmployee(id) {
+            alert('Edit functionality coming soon!');
+        }
+
+        // Seed data
+        async function seedData() {
+            if (!confirm('This will clear all data and add sample employees. Continue?')) return;
+
+            showLoader(true);
+            try {
+                const response = await fetch(`${API_URL}/seed`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    alert(`✅ ${data.message}`);
+                    loadEmployees();
+                } else {
+                    alert('❌ Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Error seeding data: ' + err.message);
+            }
+            showLoader(false);
+        }
+
+        // Apply filters
+        async function applyFilters() {
+            const dept = document.getElementById('filterDept').value;
+            const minSalary = document.getElementById('filterMinSalary').value;
+            const maxSalary = document.getElementById('filterMaxSalary').value;
+            const skill = document.getElementById('filterSkill').value;
+
+            showLoader(true);
+            try {
+                let url = `${API_URL}/users`;
+                if (dept) url = `${API_URL}/department/${dept}`;
+                else if (minSalary && maxSalary) url = `${API_URL}/salary/${minSalary}/${maxSalary}`;
+                else if (skill) url = `${API_URL}/skill/${skill}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+                displayEmployees(data.data || []);
+            } catch (err) {
+                alert('Error applying filters: ' + err.message);
+            }
+            showLoader(false);
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('filterDept').value = '';
+            document.getElementById('filterMinSalary').value = '';
+            document.getElementById('filterMaxSalary').value = '';
+            document.getElementById('filterSkill').value = '';
+            loadEmployees();
+        }
+
+        // Load employees on page load
+        window.addEventListener('DOMContentLoaded', loadEmployees);
+    </script>
+</body>
+
+</html>
